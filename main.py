@@ -39,8 +39,14 @@ class talkNonsenseWidget(QtWidgets.QWidget):
         self.publishAnswerButton.clicked.connect(self.onPublishAnswer)
         self.publishAnswerButton.setEnabled(False)
 
+        self.lookAnswerButton = QtWidgets.QPushButton(self)
+        self.lookAnswerButton.setGeometry(0, 100, 100, 20)
+        self.lookAnswerButton.setText("查看问题")
+        self.lookAnswerButton.clicked.connect(self.onLookAnswer)
+        self.lookAnswerButton.setEnabled(False)
+
         self.emptyButton = QtWidgets.QPushButton(self)
-        self.emptyButton.setGeometry(0, 100, 100, 20)
+        self.emptyButton.setGeometry(0, 130, 100, 20)
         self.emptyButton.setText("清空问题")
         self.emptyButton.clicked.connect(self.onEmptyButton)
 
@@ -128,8 +134,8 @@ class talkNonsenseWidget(QtWidgets.QWidget):
     def getDarkResult(self):
         # 这里播放天黑请闭眼的音乐
         self.daybreakMusicStartPlayer.play()
-        # 三秒后 开启老实人睁眼
-        QtCore.QTimer.singleShot(3000, self.daybreakResult)
+        # 请求答案会满提前开启 开启老实人睁眼
+        QtCore.QTimer.singleShot(200, self.daybreakResult)
         self.getDarkButton.setEnabled(False)
 
     def onPublishAnswer(self):
@@ -138,6 +144,16 @@ class talkNonsenseWidget(QtWidgets.QWidget):
         messages = self.messages[-1]
         self.assistantText = messages.get("content", "")
         self.publishAnswerButton.setEnabled(False)
+        self.lookAnswerButton.setEnabled(True)
+        self.update()
+
+    def onLookAnswer(self):
+        if not self.messages:
+            return
+        messages = self.messages[-3]
+        self.assistantText = messages.get("content", "")
+        self.lookAnswerButton.setEnabled(False)
+        self.publishAnswerButton.setEnabled(True)
         self.update()
 
     def onEmptyButton(self):
