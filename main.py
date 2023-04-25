@@ -79,22 +79,22 @@ class talkNonsenseWidget(QtWidgets.QWidget):
         self.inTextEdit.setFont(QtGui.QFont("Microsoft YaHei", 10))
 
         self.daybreakMusicStartPlayer = QMediaPlayer()
-        url = QtCore.QUrl.fromLocalFile("daybreakMusicStart.mp3")
+        url = QtCore.QUrl.fromLocalFile("./daybreakMusicStart.mp3")
         content = QMediaContent(url)
         self.daybreakMusicStartPlayer.setMedia(content)
 
         self.daybreakMusicPlayer = QMediaPlayer()
-        url = QtCore.QUrl.fromLocalFile("daybreakMusic.mp3")
+        url = QtCore.QUrl.fromLocalFile("./daybreakMusic.mp3")
         content = QMediaContent(url)
         self.daybreakMusicPlayer.setMedia(content)
 
         self.countDownStartPlayer = QMediaPlayer()
-        url = QtCore.QUrl.fromLocalFile("countDownStart.mp3")
+        url = QtCore.QUrl.fromLocalFile("./countDownStart.mp3")
         content = QMediaContent(url)
         self.countDownStartPlayer.setMedia(content)
 
         self.countDownStopPlayer = QMediaPlayer()
-        url = QtCore.QUrl.fromLocalFile("countDownStop.mp3")
+        url = QtCore.QUrl.fromLocalFile("./countDownStop.mp3")
         content = QMediaContent(url)
         self.countDownStopPlayer.setMedia(content)
 
