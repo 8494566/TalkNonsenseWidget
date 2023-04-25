@@ -19,8 +19,7 @@ app_key = "mrke45mm6jnvi64db8q58timadq771"
 class talkNonsenseWidget(QtWidgets.QWidget):
     def __init__(self, parent=None):
         super(talkNonsenseWidget, self).__init__(parent)
-        self.setWindowFlags(self.windowFlags() | QtCore.Qt.WindowStaysOnTopHint)
-        self.setFixedSize(1020, 1000)
+        self.setFixedSize(1040, 1000)
 
         self.quizButton = QtWidgets.QPushButton(self)
         self.quizButton.setGeometry(0, 10, 100, 20)
@@ -51,7 +50,7 @@ class talkNonsenseWidget(QtWidgets.QWidget):
         self.emptyButton.clicked.connect(self.onEmptyButton)
 
         self.sendingProblem = QtWidgets.QPushButton(self)
-        self.sendingProblem.setGeometry(775, 140, 100, 20)
+        self.sendingProblem.setGeometry(795, 140, 100, 20)
         self.sendingProblem.setText("发送问题")
         self.sendingProblem.clicked.connect(self.onSendingProblem)
 
@@ -76,25 +75,28 @@ class talkNonsenseWidget(QtWidgets.QWidget):
 
         self.inTextEdit = QtWidgets.QTextEdit(self)
         self.inTextEdit.setGeometry(self.lineEdit.x() + self.lineEdit.width() + 5, self.lineEdit.y(), 500, 150)
-        self.inTextEdit.setFont(QtGui.QFont("Microsoft YaHei", 10))
+        self.inTextEdit.setFont(QtGui.QFont("Arial", 10))
 
+        dirPath = sys.path[0]
+        dirPath = dirPath.replace("\\base_library.zip", "")
         self.daybreakMusicStartPlayer = QMediaPlayer()
-        url = QtCore.QUrl.fromLocalFile("./daybreakMusicStart.mp3")
+        url = QtCore.QUrl.fromLocalFile(dirPath + "/daybreakMusicStart.mp3")
         content = QMediaContent(url)
         self.daybreakMusicStartPlayer.setMedia(content)
 
         self.daybreakMusicPlayer = QMediaPlayer()
-        url = QtCore.QUrl.fromLocalFile("./daybreakMusic.mp3")
+        url = QtCore.QUrl.fromLocalFile(dirPath + "/daybreakMusic.mp3")
         content = QMediaContent(url)
         self.daybreakMusicPlayer.setMedia(content)
 
         self.countDownStartPlayer = QMediaPlayer()
-        url = QtCore.QUrl.fromLocalFile("./countDownStart.mp3")
+        url = QtCore.QUrl.fromLocalFile(dirPath + "/countDownStart.mp3")
         content = QMediaContent(url)
         self.countDownStartPlayer.setMedia(content)
+        self.countDownStartPlayer.stateChanged.connect(self.countDown.start)
 
         self.countDownStopPlayer = QMediaPlayer()
-        url = QtCore.QUrl.fromLocalFile("./countDownStop.mp3")
+        url = QtCore.QUrl.fromLocalFile(dirPath + "/countDownStop.mp3")
         content = QMediaContent(url)
         self.countDownStopPlayer.setMedia(content)
 
@@ -134,8 +136,8 @@ class talkNonsenseWidget(QtWidgets.QWidget):
     def getDarkResult(self):
         # 这里播放天黑请闭眼的音乐
         self.daybreakMusicStartPlayer.play()
-        # 请求答案会满提前开启 开启老实人睁眼
-        QtCore.QTimer.singleShot(200, self.daybreakResult)
+        # 请求答案会满提前开启 开启老实人睁眼 调试慢 正式环境很快等一秒吧
+        QtCore.QTimer.singleShot(1000, self.daybreakResult)
         self.getDarkButton.setEnabled(False)
 
     def onPublishAnswer(self):
@@ -164,10 +166,17 @@ class talkNonsenseWidget(QtWidgets.QWidget):
         self.inTextEdit.setText("")
         self.update()
 
-    def getPostChatAppendMessages(self):
-        response = post_chat(app_id, app_key, self.messages, 'gpt-3.5-turbo', 200, 0.7, 1, None, 0, 0)
+    def postChatAppendMessages(self, response):
+        if not response:
+            return
         detail = response.get("detail", {})
         choices = detail.get("choices", [])
+        messages = self.messages[-1]
+        if messages.get("content" "") == "公布答案":
+            # 这里播放老实人睁眼的音乐
+            self.countDownStartPlayer.play()
+            # # 开启倒计时给老实人提示
+            # self.countDown.start()
         for val in choices:
             messages = val.get("message", {})
             if not messages:
@@ -175,6 +184,9 @@ class talkNonsenseWidget(QtWidgets.QWidget):
             self.assistantText = messages.get("content", "")
             self.messages.append(messages)
         self.update()
+
+    def getPostChatAppendMessages(self):
+        post_chat(app_id, app_key, self.messages, 'gpt-3.5-turbo', 200, 0.7, 1, None, 0, 0, self.postChatAppendMessages)
 
     def onSendingProblem(self):
         text = self.inTextEdit.toPlainText()
@@ -196,10 +208,6 @@ class talkNonsenseWidget(QtWidgets.QWidget):
             }
         self.messages.append(messages)
         self.getPostChatAppendMessages()
-        # 这里播放老实人睁眼的音乐
-        self.countDownStartPlayer.play()
-        # 开启倒计时给老实人提示
-        self.countDown.start()
 
     def onTextChanged(self, text):
         if not text:
@@ -210,12 +218,11 @@ class talkNonsenseWidget(QtWidgets.QWidget):
     def paintEvent(self, event):
         Painter = QtGui.QPainter(self)
 
-        Painter.save()
         Painter.setRenderHints(
             QtGui.QPainter.Antialiasing | QtGui.QPainter.TextAntialiasing | QtGui.QPainter.SmoothPixmapTransform)
 
         # 画文字
-        ft = QtGui.QFont("Microsoft YaHei", 30, QtGui.QFont.Bold)
+        ft = QtGui.QFont("Arial", 30, QtGui.QFont.Bold)
         Painter.setFont(ft)
         if self.countDownConst <= 0:
             text = "老实人请闭眼"
@@ -232,11 +239,10 @@ class talkNonsenseWidget(QtWidgets.QWidget):
         Painter.fillPath(path, QtGui.QBrush(QtGui.QColor("#FFED8F")))
 
         if not self.assistantText:
-            Painter.end()
             return
         inRect = QtCore.QRect(10, 195, 985, 445)
         # 设置换行文本的宽度
-        lineWidth = 500
+        lineWidth = 480
         lines = fm.elidedText(self.assistantText, QtCore.Qt.ElideRight, lineWidth)
         lineRect = fm.boundingRect(lines)
 
@@ -252,7 +258,6 @@ class talkNonsenseWidget(QtWidgets.QWidget):
 
         Painter.strokePath(path, QtGui.QPen(QtGui.QColor("#3F1212"), 2))
         Painter.fillPath(path, QtGui.QBrush(QtGui.QColor("#FFED8F")))
-        Painter.end()
 
 
 # 按间距中的绿色按钮以运行脚本。

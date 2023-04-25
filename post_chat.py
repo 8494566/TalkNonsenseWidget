@@ -7,6 +7,7 @@
 # ==============================================
 
 
+import threading
 import requests
 import json
 import hashlib
@@ -15,7 +16,8 @@ import string
 import time
 
 
-def post_chat(app_id, app_key, messages, model, max_tokens, temperature, top_p, stop, presence_penalty, frequency_penalty):
+def post_chat(app_id, app_key, messages, model, max_tokens, temperature, top_p, stop, presence_penalty,
+              frequency_penalty, callback):
     nonce = ''.join(random.choices(string.ascii_letters + string.digits, k=10))
     timestamp = str(int(time.time()))
     str2sign = f'appId={app_id}&nonce={nonce}&timestamp={timestamp}&appkey={app_key}'
@@ -41,7 +43,11 @@ def post_chat(app_id, app_key, messages, model, max_tokens, temperature, top_p, 
         'frequencyPenalty': frequency_penalty
     }
 
-    response = requests.post(f'https://aigc-api-trial.hz.netease.com/openai/api/v2/text/chat', headers=headers, data=json.dumps(data))
-    return response.json()
+    url = f'https://aigc-api-trial.hz.netease.com/openai/api/v2/text/chat'
 
+    # 开启线程调用post请求
+    def post_request():
+        response = requests.post(url, headers=headers, data=json.dumps(data))
+        callback(response.json())
 
+    threading.Thread(target=post_request).start()
