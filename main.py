@@ -6,8 +6,8 @@
 # ============================================================================ #
 import sys
 import textwrap
-
-from post_chat import post_chat
+import json
+from post_chat import PostCgiHelper
 from PyQt5 import QtGui, QtWidgets, QtCore
 from PyQt5.QtMultimedia import QMediaPlayer, QMediaContent
 
@@ -101,6 +101,7 @@ class talkNonsenseWidget(QtWidgets.QWidget):
         self.countDownStopPlayer.setMedia(content)
 
         self.FirstQuestion = False
+        self.postCgiHelper = PostCgiHelper()
 
         self.messages = []
 
@@ -166,8 +167,13 @@ class talkNonsenseWidget(QtWidgets.QWidget):
         self.inTextEdit.setText("")
         self.update()
 
-    def postChatAppendMessages(self, response):
-        if not response:
+    def postChatAppendMessages(self, isSuccess, dataString, uniqueId, context):
+        jsonString = bytes(dataString).decode('utf-8')
+        if not isSuccess:
+            return
+        response = json.loads(jsonString)
+        status = response.get('status', -1)
+        if status != "000000":
             return
         detail = response.get("detail", {})
         choices = detail.get("choices", [])
@@ -186,7 +192,7 @@ class talkNonsenseWidget(QtWidgets.QWidget):
         self.update()
 
     def getPostChatAppendMessages(self):
-        post_chat(app_id, app_key, self.messages, 'gpt-3.5-turbo', 200, 0.7, 1, None, 0, 0, self.postChatAppendMessages)
+        self.postCgiHelper.post_chat(app_id, app_key, self.messages, 'gpt-3.5-turbo', 200, 0.7, 1, None, 0, 0, self.postChatAppendMessages)
 
     def onSendingProblem(self):
         text = self.inTextEdit.toPlainText()
