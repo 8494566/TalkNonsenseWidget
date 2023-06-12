@@ -55,7 +55,7 @@ class CgiHelper(QtCore.QObject):
         request = QtNetwork.QNetworkRequest(targetUrl)
         for key, value in headers.items():
             request.setRawHeader(key.encode('utf-8'), value.encode('utf-8'))
-        json_data = json.dumps(data, ensure_ascii=False).encode()
+        json_data = json.dumps(data, ensure_ascii=False).encode('utf-8')
         return self.post(request, json_data, callback, context)
 
     def get(self, request, callback, context=None):
